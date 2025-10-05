@@ -20,7 +20,7 @@ class Manga
     private ?int $tome = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $title = null;
+    private ?string $titre = null;
 
     #[ORM\ManyToOne(inversedBy: 'mangas')]
     #[ORM\JoinColumn(nullable: false)]
@@ -57,12 +57,12 @@ class Manga
 
     public function getTitle(): ?string
     {
-        return $this->title;
+        return $this->titre;
     }
 
-    public function setTitle(?string $title): static
+    public function setTitre(?string $titre): static
     {
-        $this->title = $title;
+        $this->titre = $titre;
 
         return $this;
     }
