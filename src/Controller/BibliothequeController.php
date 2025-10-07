@@ -26,9 +26,13 @@ class BibliothequeController extends AbstractController
         } else {
             $html .= "<ul>";
             foreach ($bibliotheques as $b) {
-                // Sécuriser l'affichage basique
-                $titre = htmlspecialchars($b->getTitre(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-                $html .= "<li>{$titre} (id: " . $b->getId() . ")</li>";
+                 $titre = htmlspecialchars($b->getTitre(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+                // Génère l’URL de la fiche /bibliotheque/{id}
+                $url = $this->generateUrl('bibliotheque_show', ['id' => $b->getId()]);
+
+                // Lien cliquable vers la fiche
+                $html .= '<li><a href="' . $url . '">' . $titre . ' (id: ' . $b->getId() . ')</a></li>';
             }
             $html .= "</ul>";
         }
