@@ -1,0 +1,48 @@
+{# templates/bibliotheque/show.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Bibliothèque n°{{ bibliotheque.id }}{% endblock %}
+
+{% block body %}
+  <h1>Fiche Bibliothèque</h1>
+
+  {# Décommenter pour inspecter l'objet quand tu veux #}
+  {# {% dump bibliotheque %} #}
+
+  <table class="table">
+    <tbody>
+      <tr>
+        <th>Id</th>
+        <td>{{ bibliotheque.id }}</td>
+      </tr>
+      <tr>
+        <th>Titre</th>
+        <td>{{ bibliotheque.titre }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    <a href="{{ path('bibliotheque_list') }}">← Retour à la liste</a>
+  </p>
+
+  <h2>Mangas de cette bibliothèque</h2>
+
+  {% set mangas = bibliotheque.mangas ?? [] %}
+
+  {% if mangas is empty %}
+    <p>Aucun manga pour le moment.</p>
+  {% else %}
+    <ul>
+      {% for m in mangas %}
+        <li>
+          <a href="{{ path('manga_show', { id: m.id }) }}">
+            {{ m.titre }}
+            {% if m.serie %} — {{ m.serie }}{% endif %}
+            {% if m.tome %} (tome {{ m.tome }}){% endif %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}

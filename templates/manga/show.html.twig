@@ -1,0 +1,40 @@
+{# templates/manga/show.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Manga n°{{ manga.id }}{% endblock %}
+
+{% block body %}
+  <h1>Fiche Manga</h1>
+
+  {# {% dump manga %} #}
+
+  <table class="table">
+    <tbody>
+      <tr>
+        <th>Id</th>
+        <td>{{ manga.id }}</td>
+      </tr>
+      <tr>
+        <th>Titre</th>
+        <td>{{ manga.titre }}</td>
+      </tr>
+      <tr>
+        <th>Série</th>
+        <td>{{ manga.serie ?? '—' }}</td>
+      </tr>
+      <tr>
+        <th>Tome</th>
+        <td>{{ manga.tome ?? '—' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    {# Lien retour vers sa Bibliothèque (inventaire) #}
+    {% if manga.bibliotheque is defined and manga.bibliotheque %}
+      <a href="{{ path('bibliotheque_show', { id: manga.bibliotheque.id }) }}">← Retour à la bibliothèque</a>
+    {% else %}
+      <a href="{{ path('bibliotheque_list') }}">← Retour à la liste des bibliothèques</a>
+    {% endif %}
+  </p>
+{% endblock %}

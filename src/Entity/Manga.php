@@ -55,7 +55,7 @@ class Manga
         return $this;
     }
 
-    public function getTitle(): ?string
+    public function getTitre(): ?string
     {
         return $this->titre;
     }

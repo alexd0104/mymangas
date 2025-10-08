@@ -1,0 +1,22 @@
+{# templates/bibliotheque/list.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Bibliothèques{% endblock %}
+
+{% block body %}
+  <h1>Liste des bibliothèques</h1>
+
+  {% if bibliotheques is empty %}
+    <p>Aucune bibliothèque pour le moment.</p>
+  {% else %}
+    <ul>
+      {% for b in bibliotheques %}
+        <li>
+          <a href="{{ path('bibliotheque_show', { id: b.id }) }}">
+            {{ b.titre }} (id: {{ b.id }})
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}
