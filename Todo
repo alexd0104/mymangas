@@ -1,0 +1,7 @@
+## Roadmap (prochaines étapes)
+- Vitrine (galerie) + affichage public (ManyToMany avec Manga du même propriétaire)
+- User (membre) + relation 1–1 avec Bibliothèque + rôles (RBAC)
+- Marque-pages (sessions/cookies, pas en BD)
+- Back-office minimal (EasyAdmin) — optionnel
+- Formulaires CRUD (make:crud) + validations + sécurité d’accès
+- Styles (amélioration de l’UI) + recherche simple
