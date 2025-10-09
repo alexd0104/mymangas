@@ -1,0 +1,8 @@
+# config/packages/bootstrap_menu.yaml
+bootstrap_menu:
+  menus:
+    main:
+      items:
+        home:
+          label: 'Bibliothèques'
+          route: 'bibliotheque_list'
