@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\MemberRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -33,6 +35,17 @@ class Member implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\OneToOne(mappedBy: 'proprietaire', cascade: ['persist', 'remove'])]
     private ?Bibliotheque $bibliotheque = null;
+
+    /**
+     * @var Collection<int, Vitrine>
+     */
+    #[ORM\OneToMany(targetEntity: Vitrine::class, mappedBy: 'createur')]
+    private Collection $vitrines;
+
+    public function __construct()
+    {
+        $this->vitrines = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -117,6 +130,36 @@ class Member implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         $this->bibliotheque = $bibliotheque;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Vitrine>
+     */
+    public function getVitrines(): Collection
+    {
+        return $this->vitrines;
+    }
+
+    public function addVitrine(Vitrine $vitrine): static
+    {
+        if (!$this->vitrines->contains($vitrine)) {
+            $this->vitrines->add($vitrine);
+            $vitrine->setCreateur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVitrine(Vitrine $vitrine): static
+    {
+        if ($this->vitrines->removeElement($vitrine)) {
+            // set the owning side to null (unless already changed)
+            if ($vitrine->getCreateur() === $this) {
+                $vitrine->setCreateur(null);
+            }
+        }
 
         return $this;
     }
