@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: MangaRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Manga
 {
     #[ORM\Id]
@@ -52,7 +53,7 @@ class Manga
     public function setSerie(string $serie): static
     {
         $this->serie = $serie;
-
+        $this->syncTitre();
         return $this;
     }
 
@@ -64,7 +65,7 @@ class Manga
     public function setTome(?int $tome): static
     {
         $this->tome = $tome;
-
+        $this->syncTitre();
         return $this;
     }
 
@@ -73,10 +74,13 @@ class Manga
         return $this->titre;
     }
 
+    /**
+     * Titre est dérivé de (serie, tome). Laisser public au cas où,
+     * mais il sera toujours recalculé via syncTitre() / callbacks.
+     */
     public function setTitre(?string $titre): static
     {
         $this->titre = $titre;
-
         return $this;
     }
 
@@ -88,7 +92,6 @@ class Manga
     public function setBibliotheque(?Bibliotheque $bibliotheque): static
     {
         $this->bibliotheque = $bibliotheque;
-
         return $this;
     }
 
@@ -106,7 +109,6 @@ class Manga
             $this->vitrines->add($vitrine);
             $vitrine->addManga($this);
         }
-
         return $this;
     }
 
@@ -115,7 +117,23 @@ class Manga
         if ($this->vitrines->removeElement($vitrine)) {
             $vitrine->removeManga($this);
         }
-
         return $this;
+    }
+
+    #[ORM\PrePersist]
+    #[ORM\PreUpdate]
+    public function onPreSave(): void
+    {
+        $this->syncTitre();
+    }
+
+    private function syncTitre(): void
+    {
+        $serie = $this->serie ? trim($this->serie) : '';
+        if ($serie !== '' && $this->tome !== null) {
+            $this->titre = $serie . ' — tome ' . (int) $this->tome;
+        } else {
+            $this->titre = $serie !== '' ? $serie : null;
+        }
     }
 }
