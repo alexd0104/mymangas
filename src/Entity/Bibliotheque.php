@@ -24,6 +24,10 @@ class Bibliotheque
     #[ORM\OneToMany(targetEntity: Manga::class, mappedBy: 'bibliotheque')]
     private Collection $mangas;
 
+    #[ORM\OneToOne(inversedBy: 'bibliotheque', cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Member $proprietaire = null;
+
     public function __construct()
     {
         $this->mangas = new ArrayCollection();
@@ -72,6 +76,18 @@ class Bibliotheque
                 $manga->setBibliotheque(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getProprietaire(): ?Member
+    {
+        return $this->proprietaire;
+    }
+
+    public function setProprietaire(Member $proprietaire): static
+    {
+        $this->proprietaire = $proprietaire;
 
         return $this;
     }

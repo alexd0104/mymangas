@@ -1,17 +1,15 @@
 <?php
-
 namespace App\DataFixtures;
 
+use App\Entity\Bibliotheque;
+use App\Entity\Member;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
-use App\Entity\Bibliotheque;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 
-class BibliothequeFixtures extends Fixture
+class BibliothequeFixtures extends Fixture implements DependentFixtureInterface
 {
-    // Compatibilité avec l'existant : pointe vers "Bibliothèque de Alexandre" (la 1ʳᵉ)
-    public const REF_BIBLIO_DEMO = 'biblio_demo';
-
-    // Références explicites (utiles depuis d'autres fixtures)
+    public const REF_BIBLIO_DEMO       = 'biblio_demo';
     public const REF_BIBLIO_ALEXANDRE = 'biblio_alexandre';
     public const REF_BIBLIO_QUENTIN = 'biblio_quentin';
     public const REF_BIBLIO_JEREMY      = 'biblio_jeremy';
@@ -20,36 +18,42 @@ class BibliothequeFixtures extends Fixture
 
     public function load(ObjectManager $manager): void
     {
-        $prenoms = ['Alexandre', 'Alexandre', 'Jeremy', 'Nicolas', 'Laura'];
-        $refs    = [
-            self::REF_BIBLIO_ALEXANDRE,
-            self::REF_BIBLIO_QUENTIN,
-            self::REF_BIBLIO_JEREMY,
-            self::REF_BIBLIO_NICOLAS,
-            self::REF_BIBLIO_LAURA,
+        $map = [
+            ['Alexandre', self::REF_BIBLIO_ALEXANDRE, MemberFixtures::REF_MEMBER_ALEXANDRE],
+            ['Alexandre', self::REF_BIBLIO_QUENTIN, MemberFixtures::REF_MEMBER_QUENTIN],
+            ['Jeremy',    self::REF_BIBLIO_JEREMY,      MemberFixtures::REF_MEMBER_JEREMY],
+            ['Nicolas',   self::REF_BIBLIO_NICOLAS,     MemberFixtures::REF_MEMBER_NICOLAS],
+            ['Laura',     self::REF_BIBLIO_LAURA,       MemberFixtures::REF_MEMBER_LAURA],
         ];
 
-        $first = null;
+        $firstBiblio = null;
 
-        foreach ($prenoms as $i => $prenom) {
-            $biblio = new Bibliotheque();
-            $biblio->setTitre('Bibliothèque de ' . $prenom);
+        foreach ($map as [$prenom, $refBiblio, $refMember]) {
+            /** @var Member $member */
+            $member = $this->getReference($refMember, Member::class);
 
-            $manager->persist($biblio);
+            $b = new Bibliotheque();
+            $b->setTitre('Bibliothèque de ' . $prenom);
+            // Lier AVANT le flush (respect du NOT NULL)
+            $b->setProprietaire($member);
+            $member->setBibliotheque($b);
 
-            // Ajouter des références utilisables par d'autres fixtures
-            $this->addReference($refs[$i], $biblio);
+            $manager->persist($b);
+            $this->addReference($refBiblio, $b);
 
-            if ($i === 0) {
-                $first = $biblio; // "Bibliothèque de Alexandre" (1ʳᵉ)
-            }
+            $firstBiblio ??= $b;
         }
 
         $manager->flush();
 
-        // Référence legacy pour compatibilité (ex: utilisée par MangaFixtures)
-        if ($first) {
-            $this->addReference(self::REF_BIBLIO_DEMO, $first);
+        // compat: REF_BIBLIO_DEMO pointe sur la 1re
+        if ($firstBiblio) {
+            $this->addReference(self::REF_BIBLIO_DEMO, $firstBiblio);
         }
+    }
+
+    public function getDependencies(): array
+    {
+        return [MemberFixtures::class];
     }
 }
