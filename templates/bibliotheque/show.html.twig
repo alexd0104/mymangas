@@ -36,10 +36,8 @@
     <ul>
       {% for m in mangas %}
         <li>
-          <a href="{{ path('manga_show', { id: m.id }) }}">
-            {{ m.titre }}
-            {% if m.serie %} — {{ m.serie }}{% endif %}
-            {% if m.tome %} (tome {{ m.tome }}){% endif %}
+          <a href="{{ path('app_manga_show', { id: m.id }) }}">
+            {{ m.titre }}{% if m.serie %} — {{ m.serie }}{% endif %}{% if m.tome %} (tome {{ m.tome }}){% endif %}
           </a>
         </li>
       {% endfor %}

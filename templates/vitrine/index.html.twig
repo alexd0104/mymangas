@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Vitrines{% endblock %}
+
+{% block body %}
+  <div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h3 mb-0">Vitrines</h1>
+      <a class="btn btn-primary btn-sm" href="{{ path('app_vitrine_new') }}">+ Nouvelle vitrine</a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Description</th>
+            <th>Publiée</th>
+            <th>Créateur</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for vitrine in vitrines %}
+          <tr>
+            <td>{{ vitrine.id }}</td>
+            <td class="text-truncate" style="max-width: 360px;">{{ vitrine.description }}</td>
+            <td>
+              {% if vitrine.publiee %}<span class="badge bg-success">Oui</span>
+              {% else %}<span class="badge bg-secondary">Non</span>{% endif %}
+            </td>
+            <td>{{ vitrine.createur ? vitrine.createur.email : '—' }}</td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-primary" href="{{ path('app_vitrine_show', {'id': vitrine.id}) }}">Voir</a>
+              <a class="btn btn-sm btn-primary" href="{{ path('app_vitrine_edit', {'id': vitrine.id}) }}">Éditer</a>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="5"><div class="alert alert-info mb-0">Aucune vitrine.</div></td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\MangaRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: MangaRepository::class)]
@@ -25,6 +27,17 @@ class Manga
     #[ORM\ManyToOne(inversedBy: 'mangas')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Bibliotheque $bibliotheque = null;
+
+    /**
+     * @var Collection<int, Vitrine>
+     */
+    #[ORM\ManyToMany(targetEntity: Vitrine::class, mappedBy: 'mangas')]
+    private Collection $vitrines;
+
+    public function __construct()
+    {
+        $this->vitrines = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -75,6 +88,33 @@ class Manga
     public function setBibliotheque(?Bibliotheque $bibliotheque): static
     {
         $this->bibliotheque = $bibliotheque;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Vitrine>
+     */
+    public function getVitrines(): Collection
+    {
+        return $this->vitrines;
+    }
+
+    public function addVitrine(Vitrine $vitrine): static
+    {
+        if (!$this->vitrines->contains($vitrine)) {
+            $this->vitrines->add($vitrine);
+            $vitrine->addManga($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVitrine(Vitrine $vitrine): static
+    {
+        if ($this->vitrines->removeElement($vitrine)) {
+            $vitrine->removeManga($this);
+        }
 
         return $this;
     }
