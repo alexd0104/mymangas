@@ -10,6 +10,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Entity\Bibliotheque;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 
 #[Route('/manga')]
 final class MangaController extends AbstractController
@@ -22,23 +24,40 @@ final class MangaController extends AbstractController
         ]);
     }
 
-    #[Route('/new', name: 'app_manga_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
-    {
+    
+#[Route('/manga/new/{id}', name: 'app_manga_new', methods: ['GET', 'POST'])]
+public function new(
+        Request $request,
+        EntityManagerInterface $em,
+        #[MapEntity(id: 'id')] Bibliotheque $bibliotheque
+    ): Response {
+        $user = $this->getUser();
+        $isOwner = $user instanceof \App\Entity\Member && $bibliotheque->getProprietaire() === $user;
+        $isAdmin = $this->isGranted('ROLE_ADMIN');
+
+        if (!$isOwner && !$isAdmin) {
+            throw $this->createAccessDeniedException("Vous ne pouvez pas ajouter de manga dans cette bibliothèque.");
+        }
+
         $manga = new Manga();
-        $form = $this->createForm(MangaType::class, $manga);
+        $manga->setBibliotheque($bibliotheque);
+
+        $form = $this->createForm(\App\Form\MangaType::class, $manga);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($manga);
-            $entityManager->flush();
+            $em->persist($manga);
+            $em->flush();
 
-            return $this->redirectToRoute('app_manga_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_bibliotheque_show', [
+                'id' => $bibliotheque->getId(),
+            ], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('manga/new.html.twig', [
             'manga' => $manga,
             'form' => $form,
+            'bibliotheque' => $bibliotheque,
         ]);
     }
 
@@ -59,7 +78,9 @@ final class MangaController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_manga_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_bibliotheque_show', [
+                'id' => $manga->getBibliotheque()->getId()
+                ], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('manga/edit.html.twig', [
@@ -67,6 +88,7 @@ final class MangaController extends AbstractController
             'form' => $form,
         ]);
     }
+    
 
     #[Route('/{id}', name: 'app_manga_delete', methods: ['POST'])]
     public function delete(Request $request, Manga $manga, EntityManagerInterface $entityManager): Response

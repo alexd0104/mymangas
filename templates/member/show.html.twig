@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+{% block title %}Profil membre{% endblock %}
+{% block body %}
+<div class="container my-4">
+  <h1 class="h3 mb-3">Membre</h1>
+  <p>Email : {{ member.email }}</p>
+
+  {% if member.bibliotheque %}
+    <p>
+      <a class="btn btn-primary btn-sm"
+         href="{{ path('bibliotheque_show', { id: member.bibliotheque.id }) }}">
+        Voir ma bibliothèque
+      </a>
+    </p>
+  {% else %}
+    <div class="alert alert-warning">Ce membre n'a pas encore de bibliothèque.</div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -17,10 +17,6 @@ class MangaType extends AbstractType
         $builder
             ->add('serie')
             ->add('tome')
-            ->add('bibliotheque', EntityType::class, [
-                'class' => Bibliotheque::class,
-                'choice_label' => 'id',
-            ])
             ->add('vitrines', EntityType::class, [
                 'class' => Vitrine::class,
                 'choice_label' => 'id',

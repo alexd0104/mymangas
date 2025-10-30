@@ -6,9 +6,6 @@
 {% block body %}
   <h1>Fiche Bibliothèque</h1>
 
-  {# Décommenter pour inspecter l'objet quand tu veux #}
-  {# {% dump bibliotheque %} #}
-
   <table class="table">
     <tbody>
       <tr>
@@ -23,7 +20,9 @@
   </table>
 
   <p>
-    <a href="{{ path('bibliotheque_list') }}">← Retour à la liste</a>
+    <a class="btn btn-secondary btn-sm"
+      href="{{ path('app_member_show', { id: bibliotheque.proprietaire.id }) }}">
+    </a>
   </p>
 
   <h2>Mangas de cette bibliothèque</h2>

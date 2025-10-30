@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+{% block title %}Membres{% endblock %}
+{% block body %}
+<div class="container my-4">
+  <h1 class="h3 mb-3">Membres</h1>
+  <ul>
+    {% for m in members %}
+      <li>
+        <a href="{{ path('app_member_show', {id: m.id}) }}">{{ m.email }}</a>
+      </li>
+    {% else %}
+      <li>Aucun membre</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}
