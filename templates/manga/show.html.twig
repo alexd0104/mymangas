@@ -23,6 +23,17 @@
                 <th>Titre</th>
                 <td>{{ manga.titre }}</td>
             </tr>
+
+            <tr>
+            <th>Image</th>
+            <td>
+                {% if manga.imageName %}
+                <img src="{{ vich_uploader_asset(manga, 'imageFile') }}" alt="{{ manga.titre }}" style="max-width:220px;height:auto;">
+                {% else %}
+                <em>Aucune image</em>
+                {% endif %}
+            </td>
+            </tr>
         </tbody>
     </table>
 

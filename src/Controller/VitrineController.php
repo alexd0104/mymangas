@@ -94,6 +94,13 @@ final class VitrineController extends AbstractController
         $form = $this->createForm(VitrineType::class, $vitrine);
         $form->handleRequest($request);
 
+        $vitrineOwnerBiblio = $vitrine->getCreateur()?->getBibliotheque();
+        foreach ($vitrine->getMangas() as $m) {
+            if ($m->getBibliotheque() !== $vitrineOwnerBiblio) {
+                $vitrine->removeManga($m);
+            }
+        }
+
         if ($form->isSubmitted() && $form->isValid()) {
             $em->flush();
 

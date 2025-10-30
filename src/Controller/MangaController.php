@@ -13,6 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Bibliotheque;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 
+
 #[Route('/manga')]
 final class MangaController extends AbstractController
 {
@@ -49,7 +50,7 @@ public function new(
             $em->persist($manga);
             $em->flush();
 
-            return $this->redirectToRoute('app_bibliotheque_show', [
+            return $this->redirectToRoute('bibliotheque_show', [
                 'id' => $bibliotheque->getId(),
             ], Response::HTTP_SEE_OTHER);
         }
@@ -78,7 +79,7 @@ public function new(
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_bibliotheque_show', [
+            return $this->redirectToRoute('bibliotheque_show', [
                 'id' => $manga->getBibliotheque()->getId()
                 ], Response::HTTP_SEE_OTHER);
         }
