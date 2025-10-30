@@ -28,7 +28,16 @@
 
     <a href="{{ path('app_manga_index') }}">back to list</a>
 
-    <a href="{{ path('app_manga_edit', {'id': manga.id}) }}">edit</a>
+    <div class="mt-3 d-flex gap-2">
+      <a class="btn btn-secondary btn-sm"
+         href="{{ path('bibliotheque_show', { id: manga.bibliotheque.id }) }}">
+        ← Retour à la bibliothèque
+      </a>
+
+      <a class="btn btn-primary btn-sm"
+         href="{{ path('app_manga_edit', {'id': manga.id}) }}">
+        Éditer
+      </a>
 
     {{ include('manga/_delete_form.html.twig') }}
 {% endblock %}
