@@ -2,16 +2,17 @@
 
 namespace App\Controller;
 
+use App\Entity\Member;
+use App\Entity\Manga;
 use App\Entity\Vitrine;
 use App\Form\VitrineType;
 use App\Repository\VitrineRepository;
-use App\Entity\Manga;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 
 #[Route('/vitrine')]
 final class VitrineController extends AbstractController
@@ -19,41 +20,55 @@ final class VitrineController extends AbstractController
     #[Route(name: 'app_vitrine_index', methods: ['GET'])]
     public function index(VitrineRepository $repo): Response
     {
-        // Montre TOUTES les vitrines dans la liste (publiques + privées)
-        // La protection reste dans show() qui renverra 403 si nécessaire.
-        $vitrines = $repo->findBy([], ['id' => 'ASC']);
+        // Uniquement les vitrines publiques
+        $vitrines = $repo->findBy(['publiee' => true], ['id' => 'ASC']);
 
         return $this->render('vitrine/index.html.twig', [
             'vitrines' => $vitrines,
         ]);
     }
 
+    #[Route('/new/{member_id}', name: 'app_vitrine_new', methods: ['GET', 'POST'])]
+    public function new(
+        Request $request,
+        EntityManagerInterface $em,
+        #[MapEntity(id: 'member_id')] Member $member
+    ): Response {
+        // Optionnel : restreindre la création aux propriétaires ou admins
+        $user = $this->getUser();
+        $isOwner = $user instanceof Member && $user->getId() === $member->getId();
+        $isAdmin = $this->isGranted('ROLE_ADMIN');
+        if (!$isOwner && !$isAdmin) {
+            throw $this->createAccessDeniedException("Vous ne pouvez pas créer une vitrine pour un autre membre.");
+        }
 
-    #[Route('/new', name: 'app_vitrine_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
-    {
         $vitrine = new Vitrine();
+        $vitrine->setCreateur($member);
+
         $form = $this->createForm(VitrineType::class, $vitrine);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($vitrine);
-            $entityManager->flush();
+            $em->persist($vitrine);
+            $em->flush();
 
-            return $this->redirectToRoute('app_vitrine_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_member_show', [
+                'id' => $member->getId(),
+            ], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('vitrine/new.html.twig', [
             'vitrine' => $vitrine,
-            'form' => $form,
+            'form'    => $form,
+            'member'  => $member,
         ]);
     }
 
-   #[Route('/{id}', name: 'app_vitrine_show', methods: ['GET'])]
+    #[Route('/{id}', name: 'app_vitrine_show', methods: ['GET'])]
     public function show(Vitrine $vitrine): Response
     {
-        $user = $this->getUser(); // Member|UserInterface|null
-        $isOwner = $user instanceof \App\Entity\Member && $vitrine->getCreateur() === $user;
+        $user = $this->getUser();
+        $isOwner = $user instanceof Member && $vitrine->getCreateur() === $user;
         $isAdmin = $this->isGranted('ROLE_ADMIN');
 
         if (!$vitrine->isPubliee() && !$isOwner && !$isAdmin) {
@@ -66,38 +81,61 @@ final class VitrineController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_vitrine_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Vitrine $vitrine, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Vitrine $vitrine, EntityManagerInterface $em): Response
     {
+        // Sécurité : seul le créateur ou un admin peut éditer
+        $user = $this->getUser();
+        $isOwner = $user instanceof Member && $vitrine->getCreateur() === $user;
+        $isAdmin = $this->isGranted('ROLE_ADMIN');
+        if (!$isOwner && !$isAdmin) {
+            throw $this->createAccessDeniedException("Vous ne pouvez pas modifier cette vitrine.");
+        }
+
         $form = $this->createForm(VitrineType::class, $vitrine);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
+            $em->flush();
 
-            return $this->redirectToRoute('app_vitrine_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_member_show', [
+                'id' => $vitrine->getCreateur()->getId(),
+            ], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('vitrine/edit.html.twig', [
             'vitrine' => $vitrine,
-            'form' => $form,
+            'form'    => $form,
         ]);
     }
 
     #[Route('/{id}', name: 'app_vitrine_delete', methods: ['POST'])]
-    public function delete(Request $request, Vitrine $vitrine, EntityManagerInterface $entityManager): Response
+    public function delete(Request $request, Vitrine $vitrine, EntityManagerInterface $em): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$vitrine->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($vitrine);
-            $entityManager->flush();
+        // Sécurité : seul le créateur ou un admin peut supprimer
+        $user = $this->getUser();
+        $isOwner = $user instanceof Member && $vitrine->getCreateur() === $user;
+        $isAdmin = $this->isGranted('ROLE_ADMIN');
+        if (!$isOwner && !$isAdmin) {
+            throw $this->createAccessDeniedException("Vous ne pouvez pas supprimer cette vitrine.");
         }
 
-        return $this->redirectToRoute('app_vitrine_index', [], Response::HTTP_SEE_OTHER);
+        if ($this->isCsrfTokenValid('delete'.$vitrine->getId(), $request->getPayload()->getString('_token'))) {
+            $memberId = $vitrine->getCreateur()->getId(); // récupérer avant suppression
+            $em->remove($vitrine);
+            $em->flush();
+
+            return $this->redirectToRoute('app_member_show', [
+                'id' => $memberId,
+            ], Response::HTTP_SEE_OTHER);
+        }
+
+        // En cas d'échec CSRF, on revient à la fiche vitrine
+        return $this->redirectToRoute('app_vitrine_show', [
+            'id' => $vitrine->getId(),
+        ], Response::HTTP_SEE_OTHER);
     }
 
-    /**
-     * Affichage public d'un Manga dans le contexte d'une Vitrine.
-     * URL finale: /vitrine/{vitrine_id}/manga/{manga_id}
-     */
+
     #[Route(
         '/{vitrine_id}/manga/{manga_id}',
         name: 'app_vitrine_manga_show',
@@ -108,13 +146,15 @@ final class VitrineController extends AbstractController
         #[MapEntity(id: 'vitrine_id')] Vitrine $vitrine,
         #[MapEntity(id: 'manga_id')] Manga $manga
     ): Response {
-        // 1) la vitrine doit contenir ce manga
+        // 1) le manga doit appartenir à la vitrine
         if (!$vitrine->getMangas()->contains($manga)) {
             throw $this->createNotFoundException("Ce manga n'appartient pas à cette vitrine.");
         }
 
-        // 2) la vitrine doit être publiée (sinon accès refusé)
-        if (!$vitrine->isPubliee()) {
+        $user = $this->getUser();
+        $isOwner = $user instanceof Member && $vitrine->getCreateur() === $user;
+        $isAdmin = $this->isGranted('ROLE_ADMIN');
+        if (!$vitrine->isPubliee() && !$isOwner && !$isAdmin) {
             throw $this->createAccessDeniedException("Cette vitrine n'est pas publique.");
         }
 

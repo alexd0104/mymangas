@@ -11,6 +11,36 @@
          href="{{ path('bibliotheque_show', { id: member.bibliotheque.id }) }}">
         Voir ma bibliothèque
       </a>
+
+      <hr class="my-4">
+
+        <h2 class="h5">Mes vitrines</h2>
+
+        <p>
+        <a class="btn btn-success btn-sm"
+            href="{{ path('app_vitrine_new', { member_id: member.id }) }}">
+            + Créer une vitrine
+        </a>
+        </p>
+
+        {% set vs = member.vitrines ?? [] %}
+        {% if vs is empty %}
+        <div class="alert alert-info">Aucune vitrine pour l’instant.</div>
+        {% else %}
+        <ul class="list-group">
+            {% for v in vs %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <a href="{{ path('app_vitrine_show', { id: v.id }) }}">{{ v.description }}</a>
+                {% if v.publiee %}
+                <span class="badge bg-success">Publique</span>
+                {% else %}
+                <span class="badge bg-secondary">Privée</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
     </p>
   {% else %}
     <div class="alert alert-warning">Ce membre n'a pas encore de bibliothèque.</div>
