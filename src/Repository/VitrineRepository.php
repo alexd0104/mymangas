@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Vitrine;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Entity\Member;
 
 /**
  * @extends ServiceEntityRepository<Vitrine>

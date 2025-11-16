@@ -8,3 +8,16 @@ bootstrap_menu:
         vitrines:
           label: 'Vitrines'
           route: 'app_vitrine_index'
+    
+    anonymousaccount:
+      items:
+        login:
+          label: 'Login'
+          route: 'app_login'
+
+    account:
+      items:
+        logout:
+          label: 'Logout'
+          route: 'app_logout'
+          roles: [ 'ROLE_USER' ]

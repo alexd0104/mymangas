@@ -11,6 +11,18 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/member')]
 final class MemberController extends AbstractController
 {
+    #[Route('/me', name: 'app_me', methods: ['GET'])]
+    public function me(): Response
+    {
+        /** @var Member|null $member */
+        $member = $this->getUser();
+        if (!$member) {
+            return $this->redirectToRoute('app_login');
+        }
+        // suppose que tu as déjà une route app_member_show
+        return $this->redirectToRoute('app_member_show', ['id' => $member->getId()]);
+    }
+    
     #[Route(name: 'app_member_index', methods: ['GET'])]
     public function index(MemberRepository $repo): Response
     {
