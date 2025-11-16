@@ -11,6 +11,26 @@ use App\Entity\Bibliotheque;
 
 class BibliothequeController extends AbstractController
 {
+    #[Route('/bibliotheque', name: 'app_bibliotheque_index', methods: ['GET'])]
+    public function index(BibliothequeRepository $repo): Response
+    {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $bibliotheques = $repo->findAll();
+        } else {
+            /** @var \App\Entity\Member|null $me */
+            $me = $this->getUser();
+            $bibliotheques = [];
+            if ($me && $me->getBibliotheque()) {
+                // on renvoie un tableau pour réutiliser le template d’index
+                $bibliotheques = [$me->getBibliotheque()];
+            }
+        }
+
+        return $this->render('bibliotheque/index.html.twig', [
+            'bibliotheques' => $bibliotheques,
+        ]);
+    }
+
     #[Route('/', name: 'bibliotheque_list', methods: ['GET'])]
     public function list(BibliothequeRepository $repo): Response
     {

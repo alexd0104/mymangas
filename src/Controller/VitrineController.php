@@ -20,8 +20,15 @@ final class VitrineController extends AbstractController
     #[Route(name: 'app_vitrine_index', methods: ['GET'])]
     public function index(VitrineRepository $repo): Response
     {
-        // Uniquement les vitrines publiques
-        $vitrines = $repo->findBy(['publiee' => true], ['id' => 'ASC']);
+        // Admin → tout
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $vitrines = $repo->findAll();
+        } else {
+            // Public + (si connecté) ses vitrines privées
+            /** @var \App\Entity\Member|null $me */
+            $me = $this->getUser();
+            $vitrines = $repo->findVisibleFor($me);
+        }
 
         return $this->render('vitrine/index.html.twig', [
             'vitrines' => $vitrines,

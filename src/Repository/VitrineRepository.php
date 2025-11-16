@@ -16,29 +16,44 @@ class VitrineRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Vitrine::class);
     }
+/** @return Vitrine[] */
+    public function findPublic(): array
+    {
+        return $this->createQueryBuilder('v')
+            ->andWhere('v.publiee = :pub')
+            ->setParameter('pub', true)
+            ->orderBy('v.id', 'ASC')
+            ->getQuery()->getResult();
+    }
 
-    //    /**
-    //     * @return Vitrine[] Returns an array of Vitrine objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('v')
-    //            ->andWhere('v.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('v.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /** @return Vitrine[] */
+    public function findPrivateByMember(Member $member): array
+    {
+        return $this->createQueryBuilder('v')
+            ->andWhere('v.publiee = :pub')
+            ->andWhere('v.createur = :m')
+            ->setParameter('pub', false)
+            ->setParameter('m', $member)
+            ->orderBy('v.id', 'ASC')
+            ->getQuery()->getResult();
+    }
 
-    //    public function findOneBySomeField($value): ?Vitrine
-    //    {
-    //        return $this->createQueryBuilder('v')
-    //            ->andWhere('v.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    /** @return Vitrine[]  (optionnel : tout ce qui est visible pour un membre donné) */
+    public function findVisibleFor(?Member $member): array
+    {
+        $qb = $this->createQueryBuilder('v')
+            ->andWhere('v.publiee = :pub')
+            ->setParameter('pub', true);
+
+        if ($member) {
+            // union simple : publiques + privées du membre
+            $qb = $this->createQueryBuilder('v')
+                ->andWhere('(v.publiee = :pub) OR (v.publiee = :priv AND v.createur = :m)')
+                ->setParameter('pub', true)
+                ->setParameter('priv', false)
+                ->setParameter('m', $member);
+        }
+
+        return $qb->orderBy('v.id', 'ASC')->getQuery()->getResult();
+    }
 }

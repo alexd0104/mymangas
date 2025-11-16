@@ -17,14 +17,26 @@ use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 #[Route('/manga')]
 final class MangaController extends AbstractController
 {
-    #[Route(name: 'app_manga_index', methods: ['GET'])]
-    public function index(MangaRepository $mangaRepository): Response
+   #[Route('/manga', name: 'app_manga_index', methods: ['GET'])]
+    public function index(MangaRepository $repo): Response
     {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $mangas = $repo->findAll();
+        } else {
+            /** @var \App\Entity\Member $me */
+            $me = $this->getUser();
+            if (!$me) {
+                // anonyme : aucun “listing global” de mangas
+                $mangas = [];
+            } else {
+                $mangas = $repo->findMemberMangas($me);
+            }
+        }
+
         return $this->render('manga/index.html.twig', [
-            'mangas' => $mangaRepository->findAll(),
+            'mangas' => $mangas,
         ]);
     }
-
     
 #[Route('/manga/new/{id}', name: 'app_manga_new', methods: ['GET', 'POST'])]
 public function new(
