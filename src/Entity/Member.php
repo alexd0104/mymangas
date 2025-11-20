@@ -21,6 +21,11 @@ class Member implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 180)]
     private ?string $email = null;
 
+    public function __toString(): string
+    {
+        return $this->getEmail() ?? ('Member #'.$this->getId());
+    }
+
     /**
      * @var list<string> The user roles
      */

@@ -8,61 +8,50 @@ use App\Repository\MangaRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-// IMPORTANT: si tu veux typer explicitement, dé-commente EntityType ci-dessous
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use App\Entity\Member;
 
 class VitrineType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        /** @var Vitrine|null $vitrine */
+        /** @var \App\Entity\Vitrine|null $vitrine */
         $vitrine = $options['data'] ?? null;
-        $member  = $vitrine?->getCreateur();                 // propriétaire de la vitrine
-        $biblio  = $member?->getBibliotheque();              // sa bibliothèque
+        $member = $vitrine?->getCreateur();
 
         $builder
-            ->add('description')
-            ->add('publiee')
-            ->add('createur', null, [
-                'disabled' => true,                           // on n’autorise pas à changer le créateur ici
+            ->add('description', null, [
+                'label' => 'Description',
             ])
-            ->add('mangas',
-                // tu peux laisser "null" mais je conseille d'utiliser explicitement EntityType:
-                EntityType::class,
-                [
-                    'class'        => Manga::class,
-                    'choice_label' => function (Manga $m) {
-                        // libellé sympa dans le formulaire
-                        $serie = $m->getSerie();
-                        $tome  = $m->getTome();
-                        return $tome ? sprintf('%s — tome %d', $serie, $tome) : $serie;
-                    },
-
-                    // clé pour sauvegarder correctement une collection ManyToMany
-                    'by_reference' => false,
-
-                    // multi-sélection; "expanded: true" = cases à cocher
-                    'multiple'     => true,
-                    'expanded'     => true,
-
-                    // on filtre les mangas proposés : uniquement ceux de la biblio du créateur
-                    'query_builder' => function (MangaRepository $er) use ($biblio) {
-                        $qb = $er->createQueryBuilder('m')
-                                ->orderBy('m.serie', 'ASC')
-                                ->addOrderBy('m.tome', 'ASC');
-
-                        if ($biblio !== null) {
-                            $qb->andWhere('m.bibliotheque = :b')
-                               ->setParameter('b', $biblio);
-                        } else {
-                            // cas défensif : si pas de biblio (ne devrait pas arriver), on vide la liste
-                            $qb->andWhere('1 = 0');
-                        }
-
-                        return $qb;
-                    },
-                ]
-            )
+            ->add('publiee', null, [
+                'label' => 'Publiée',
+                'required' => false,
+            ])
+            ->add('createur', EntityType::class, [
+                'class' => Member::class,
+                'choice_label' => 'email',
+                'label' => 'Créateur',
+                'disabled' => true,
+            ])
+            ->add('mangas', EntityType::class, [
+                'class' => Manga::class,
+                'choice_label' => 'titre',
+                'multiple' => true,
+                'expanded' => true,      // cases à cocher
+                'by_reference' => false, // important pour ManyToMany
+                'label' => 'Mangas',
+                // filtrage aux mangas du créateur, si disponible
+                'query_builder' => function (MangaRepository $er) use ($member) {
+                    if (!$member) {
+                        return $er->createQueryBuilder('m')->where('1 = 0');
+                    }
+                    return $er->createQueryBuilder('m')
+                        ->leftJoin('m.bibliotheque', 'b')
+                        ->andWhere('b.proprietaire = :m')
+                        ->setParameter('m', $member)
+                        ->orderBy('m.titre', 'ASC');
+                },
+            ])
         ;
     }
 
