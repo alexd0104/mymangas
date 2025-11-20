@@ -101,4 +101,10 @@ Prérequis : PHP, Composer, Symfony CLI.
 - Pas de publication “réaliste” fine : focus sur le cœur pédagogique.
 - Pas de migrations complexes (dev local, pas de prod).
 
+## 9) Identificaton :
+
+Les idenfiants de connexion sont prenom@example.test et mot de passe 123456
+
+
+
 
